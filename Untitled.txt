@@ -1,0 +1,2 @@
+cd "/Users/antonispapachrisanthou/Documents/test pro"
+python3 server.py
