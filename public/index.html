@@ -41,13 +41,6 @@
       padding: 24px;
     }
 
-    .status {
-      margin-top: 12px;
-      min-height: 24px;
-      font-size: 0.95rem;
-      color: #7a2e21;
-    }
-
     h1 {
       margin: 0 0 12px;
       font-size: clamp(2rem, 4vw, 3rem);
@@ -89,8 +82,6 @@
       <h1>Το workflow σου</h1>
       <p>Αυτή η σελίδα δεν μιλάει με απλό prompt.</p>
       <p>Μιλάει με το published workflow σου από το Agent Builder μέσω <code>workflow id</code>.</p>
-      <p>Αν δεις error, έλεγξε πρώτα το αρχείο <code>.env</code>.</p>
-      <div class="status" id="status"></div>
     </section>
 
     <section class="card">
@@ -101,7 +92,6 @@
   <script>
     function bootChatKit() {
       const chat = document.getElementById("chat");
-      const status = document.getElementById("status");
 
       if (!chat || typeof chat.setOptions !== "function") {
         window.setTimeout(bootChatKit, 250);
@@ -111,7 +101,6 @@
       chat.setOptions({
         api: {
           async getClientSecret() {
-            status.textContent = "Γίνεται σύνδεση με το workflow...";
             const response = await fetch("/api/chatkit/session", {
               method: "POST",
               headers: {
@@ -122,24 +111,12 @@
             const data = await response.json();
             if (!response.ok) {
               console.error("Session error", data);
-              status.textContent = "Απέτυχε η δημιουργία session. Δες terminal / .env.";
               throw new Error(data.error || "Could not create ChatKit session");
             }
 
-            status.textContent = "Το session δημιουργήθηκε. Αν αποτύχει μήνυμα, άνοιξε browser console.";
             return data.client_secret;
           }
         }
-      });
-
-      window.addEventListener("error", (event) => {
-        console.error("Window error", event.error || event.message);
-        status.textContent = "Υπάρχει browser-side error. Πάτα F12 και άνοιξε Console.";
-      });
-
-      window.addEventListener("unhandledrejection", (event) => {
-        console.error("Unhandled rejection", event.reason);
-        status.textContent = "Υπάρχει browser-side error. Πάτα F12 και άνοιξε Console.";
       });
     }
 
