@@ -229,13 +229,12 @@
     .main {
       padding: 24px;
       display: grid;
-      gap: 18px;
-      grid-template-rows: auto auto minmax(0, 1fr);
+      gap: 16px;
+      grid-template-rows: auto minmax(0, 1fr);
       min-height: 100vh;
     }
 
     .topbar,
-    .summary-strip,
     .workspace {
       border: 1px solid var(--line);
       background: linear-gradient(180deg, rgba(15, 24, 43, 0.95), rgba(11, 18, 33, 0.94));
@@ -295,83 +294,19 @@
       box-shadow: 0 0 0 6px rgba(36, 208, 139, 0.12);
     }
 
-    .summary-strip {
-      padding: 18px 22px;
-      display: grid;
-      grid-template-columns: repeat(4, minmax(0, 1fr));
-      gap: 12px;
-    }
-
-    .summary-card {
-      border-radius: 20px;
-      border: 1px solid var(--line);
-      background: rgba(22, 35, 59, 0.72);
-      padding: 14px 16px;
-    }
-
-    .summary-card .label {
-      color: var(--muted);
-      font-size: 0.8rem;
-    }
-
-    .summary-card .value {
-      margin-top: 10px;
-      font-size: 1.4rem;
-      font-weight: 700;
-    }
-
     .workspace {
-      padding: 18px;
+      padding: 14px;
       display: grid;
-      grid-template-rows: auto minmax(0, 1fr);
-      gap: 16px;
+      grid-template-rows: minmax(0, 1fr);
       min-height: 0;
-      height: calc(100vh - 84px);
-    }
-
-    .hero {
-      border: 1px solid var(--line);
-      border-radius: 24px;
-      padding: 20px 22px;
-      background:
-        radial-gradient(circle at top right, rgba(55, 199, 255, 0.12), transparent 34%),
-        linear-gradient(180deg, rgba(17, 27, 47, 0.9), rgba(12, 20, 34, 0.9));
-      display: flex;
-      justify-content: space-between;
-      gap: 18px;
-      align-items: center;
-    }
-
-    .hero-copy h2 {
-      margin: 0 0 10px;
-      font-size: 1.45rem;
-      line-height: 1;
-    }
-
-    .hero-copy p {
-      margin: 0;
-      color: var(--muted);
-      max-width: 60ch;
-    }
-
-    .hero-note {
-      display: grid;
-      gap: 8px;
-      justify-items: end;
-      text-align: right;
-      color: var(--muted);
-      font-size: 0.88rem;
-    }
-
-    .hero-note strong {
-      color: var(--text);
+      height: calc(100vh - 132px);
     }
 
     .chat-frame {
-      height: min(68vh, 760px);
+      height: 100%;
       min-height: 0;
       border: 1px solid var(--line);
-      border-radius: 24px;
+      border-radius: 26px;
       overflow: hidden;
       background: rgba(9, 15, 28, 0.74);
       position: relative;
@@ -424,10 +359,6 @@
         border-bottom: 1px solid var(--line);
       }
 
-      .summary-strip {
-        grid-template-columns: repeat(2, minmax(0, 1fr));
-      }
-
       .workspace {
         height: auto;
       }
@@ -439,29 +370,18 @@
       }
 
       .topbar,
-      .summary-strip,
       .workspace,
       .sidebar {
         border-radius: 22px;
       }
 
-      .topbar,
-      .hero {
+      .topbar {
         grid-template-columns: 1fr;
         display: grid;
       }
 
-      .hero-note {
-        justify-items: start;
-        text-align: left;
-      }
-
-      .summary-strip {
-        grid-template-columns: 1fr;
-      }
-
       .chat-frame {
-        height: min(62vh, 640px);
+        height: min(72vh, 700px);
       }
 
       #chat-host,
@@ -509,20 +429,7 @@
         </div>
       </section>
 
-      <section class="summary-strip" id="summary-strip"></section>
-
       <section class="workspace">
-        <div class="hero">
-          <div class="hero-copy">
-            <h2 id="hero-title">Revenue AI</h2>
-            <p id="hero-text">Επιλογή agent και δυναμική σύνδεση με το σωστό workflow χωρίς hardcoded ρυθμίσεις.</p>
-          </div>
-          <div class="hero-note">
-            <strong id="hero-agent-name">-</strong>
-            <span id="hero-hint">-</span>
-          </div>
-        </div>
-
         <div class="chat-frame">
           <div class="chat-loading" id="chat-loading">Φορτώνω τον επιλεγμένο agent...</div>
           <div class="chat-error" id="chat-error" hidden></div>
@@ -641,7 +548,6 @@
 
     function renderMetrics() {
       const metricsHost = document.getElementById("sidebar-metrics");
-      const summaryHost = document.getElementById("summary-strip");
       const categoriesCount = getAllCategories().length - 1;
       const activeAgents = state.agents.filter((agent) => agent.enabled).length;
       const featuredAgents = state.agents.filter((agent) => agent.featured && agent.enabled).length;
@@ -660,21 +566,6 @@
           <div class="metric-value">${item.value}</div>
         </div>
       `).join("");
-
-      const selectedAgent = getSelectedAgent();
-      const summaryCards = [
-        { label: "Selected Agent", value: selectedAgent ? selectedAgent.name : "-" },
-        { label: "Status", value: selectedAgent && selectedAgent.ready ? "Online" : "Needs setup" },
-        { label: "Categories", value: selectedAgent ? selectedAgent.categories.length : 0 },
-        { label: "Audience", value: selectedAgent && selectedAgent.audiences.length ? selectedAgent.audiences[0] : "-" }
-      ];
-
-      summaryHost.innerHTML = summaryCards.map((item) => `
-        <div class="summary-card">
-          <div class="label">${item.label}</div>
-          <div class="value">${item.value}</div>
-        </div>
-      `).join("");
     }
 
     function renderHeader() {
@@ -682,12 +573,13 @@
       const categoryText = agent && agent.categories.length ? agent.categories.join(" / ") : "Revenue Console";
       document.getElementById("topbar-category").textContent = categoryText;
       document.getElementById("topbar-title").textContent = agent ? agent.name : "No agent selected";
-      document.getElementById("topbar-subtitle").textContent = agent ? (agent.subtitle || agent.description || "") : "Δεν βρέθηκε διαθέσιμος agent.";
+      document.getElementById("topbar-subtitle").textContent = agent
+        ? `${agent.subtitle || ""} ${agent.welcome_text || agent.description || ""}`.trim()
+        : "Δεν βρέθηκε διαθέσιμος agent.";
       document.getElementById("topbar-status").textContent = agent && agent.ready ? "Online" : "Needs workflow";
-      document.getElementById("hero-title").textContent = agent ? (agent.welcome_title || agent.name) : "Revenue AI";
-      document.getElementById("hero-text").textContent = agent ? (agent.welcome_text || agent.description || "") : "Πρόσθεσε τουλάχιστον έναν agent στο registry.";
-      document.getElementById("hero-agent-name").textContent = agent ? agent.name : "-";
-      document.getElementById("hero-hint").textContent = agent ? (agent.empty_state_hint || agent.placeholder || "") : "-";
+      document.getElementById("sidebar-footer").innerHTML = agent
+        ? `${agent.empty_state_hint || agent.placeholder || agent.description || ""}`
+        : 'Δομή χωρίς hardcode. Πρόσθεσε νέους agents από το <code>agents.json</code>.';
     }
 
     function renderAppChrome() {
