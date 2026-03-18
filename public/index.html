@@ -19,7 +19,6 @@
       --green: #24d08b;
       --violet: #9f6bff;
       --shadow: 0 28px 90px rgba(3, 8, 18, 0.55);
-      color-scheme: dark;
       font-family: "Avenir Next", "Trebuchet MS", sans-serif;
     }
 
@@ -297,19 +296,21 @@
     .workspace {
       padding: 14px;
       display: grid;
-      grid-template-rows: minmax(0, 1fr);
+      grid-template-rows: auto;
       min-height: 0;
-      height: calc(100vh - 132px);
+      height: auto;
     }
 
     .chat-frame {
-      height: 100%;
-      min-height: 0;
+      height: auto;
+      min-height: 840px;
       border: 1px solid var(--line);
       border-radius: 26px;
-      overflow: hidden;
-      background: rgba(9, 15, 28, 0.74);
+      overflow: auto;
+      background:
+        linear-gradient(180deg, rgba(28, 39, 63, 0.96), rgba(18, 27, 44, 0.98));
       position: relative;
+      padding: 14px;
     }
 
     .chat-loading,
@@ -335,9 +336,15 @@
     #chat-host,
     #chat-host openai-chatkit {
       width: 100%;
-      height: 100%;
-      min-height: 0;
+      height: auto;
+      min-height: 840px;
       display: block;
+      border-radius: 24px;
+      overflow: hidden;
+      background: #ffffff;
+      box-shadow:
+        inset 0 0 0 1px rgba(17, 27, 47, 0.06),
+        0 12px 26px rgba(4, 10, 22, 0.18);
     }
 
     .empty-list {
@@ -381,12 +388,12 @@
       }
 
       .chat-frame {
-        height: min(72vh, 700px);
+        min-height: 720px;
       }
 
       #chat-host,
       #chat-host openai-chatkit {
-        min-height: 0;
+        min-height: 720px;
       }
     }
   </style>
