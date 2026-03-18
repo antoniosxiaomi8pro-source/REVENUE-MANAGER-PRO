@@ -225,7 +225,7 @@
     }
 
     .main {
-      padding: 24px;
+      padding: 18px;
       display: grid;
       gap: 16px;
       grid-template-rows: auto minmax(0, 1fr);
@@ -293,22 +293,20 @@
     }
 
     .workspace {
-      padding: 14px;
+      padding: 12px;
       display: grid;
-      grid-template-rows: auto;
       min-height: 0;
-      height: auto;
     }
 
     .chat-frame {
-      height: auto;
-      min-height: 840px;
+      height: calc(100vh - 170px);
+      min-height: 620px;
       border: 1px solid var(--line);
       border-radius: 26px;
-      overflow: auto;
-      background: #ffffff;
+      overflow: hidden;
+      background: rgba(255, 255, 255, 0.96);
       position: relative;
-      padding: 14px;
+      padding: 0;
     }
 
     .chat-loading,
@@ -334,15 +332,12 @@
     #chat-host,
     #chat-embed {
       width: 100%;
-      height: auto;
-      min-height: 840px;
+      height: 100%;
+      min-height: 0;
       display: block;
-      border-radius: 24px;
+      border-radius: 26px;
       overflow: hidden;
       background: #ffffff;
-      box-shadow:
-        inset 0 0 0 1px rgba(17, 27, 47, 0.06),
-        0 12px 26px rgba(4, 10, 22, 0.18);
     }
 
     #chat-embed {
@@ -368,8 +363,8 @@
         border-bottom: 1px solid var(--line);
       }
 
-      .workspace {
-        height: auto;
+      .chat-frame {
+        height: calc(100vh - 220px);
       }
     }
 
@@ -390,12 +385,8 @@
       }
 
       .chat-frame {
-        min-height: 720px;
-      }
-
-      #chat-host,
-      #chat-embed {
-        min-height: 720px;
+        height: calc(100vh - 180px);
+        min-height: 540px;
       }
     }
   </style>
@@ -582,8 +573,11 @@
       const categoryText = agent && agent.categories.length ? agent.categories.join(" / ") : "Revenue Console";
       document.getElementById("topbar-category").textContent = categoryText;
       document.getElementById("topbar-title").textContent = agent ? agent.name : "No agent selected";
-      document.getElementById("topbar-subtitle").textContent = agent
-        ? `${agent.subtitle || ""} ${agent.welcome_text || agent.description || ""}`.trim()
+      const subtitleParts = agent
+        ? [agent.subtitle, agent.welcome_text || agent.description].filter(Boolean)
+        : [];
+      document.getElementById("topbar-subtitle").textContent = subtitleParts.length
+        ? subtitleParts.join(" · ")
         : "Δεν βρέθηκε διαθέσιμος agent.";
       document.getElementById("topbar-status").textContent = agent && agent.ready ? "Online" : "Needs workflow";
       document.getElementById("sidebar-footer").innerHTML = agent
