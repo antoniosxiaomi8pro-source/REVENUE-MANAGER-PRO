@@ -4,6 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Revenue AI Console</title>
+  <script src="https://cdn.platform.openai.com/deployments/chatkit/chatkit.js" async></script>
   <style>
     :root {
       --bg: #09111f;
@@ -293,56 +294,80 @@
     }
 
     .workspace {
-      padding: 12px;
+      padding: 20px;
       display: grid;
       min-height: 0;
     }
 
-    .chat-frame {
-      height: clamp(680px, 78vh, 860px);
-      min-height: 680px;
-      border: 1px solid var(--line);
-      border-radius: 26px;
-      overflow: hidden;
-      background: #ffffff;
+    .chat-shell {
+      width: min(100%, 1180px);
+      display: grid;
+      gap: 20px;
+      grid-template-columns: 300px minmax(0, 1fr);
+      align-items: start;
+    }
+
+    .light-card {
+      background: rgba(255, 255, 255, 0.96);
+      border: 1px solid rgba(17, 27, 47, 0.08);
+      border-radius: 24px;
+      box-shadow: 0 20px 50px rgba(6, 13, 28, 0.12);
+      color: #172133;
+      padding: 24px;
+    }
+
+    .intro-card h2 {
+      margin: 0 0 12px;
+      font-family: Georgia, "Times New Roman", serif;
+      font-size: clamp(2rem, 4vw, 2.9rem);
+      line-height: 0.95;
+      letter-spacing: -0.04em;
+      color: #171d2a;
+    }
+
+    .intro-card p {
+      margin: 0 0 12px;
+      line-height: 1.5;
+      color: #38435c;
+    }
+
+    .intro-card code {
+      background: #edf2f9;
+      padding: 2px 8px;
+      border-radius: 8px;
+    }
+
+    .chat-card {
       position: relative;
-      padding: 0;
-      box-shadow: inset 0 0 0 1px rgba(17, 27, 47, 0.06);
+      min-height: 760px;
+      overflow: hidden;
     }
 
     .chat-loading,
     .chat-error {
       position: absolute;
-      inset: 18px;
+      inset: 24px;
       display: grid;
       place-items: center;
       text-align: center;
       padding: 24px;
-      border-radius: 20px;
-      border: 1px dashed rgba(151, 176, 214, 0.22);
-      background: rgba(8, 14, 26, 0.74);
-      color: var(--muted);
+      border-radius: 18px;
+      border: 1px dashed rgba(23, 33, 51, 0.14);
+      background: rgba(255, 255, 255, 0.92);
+      color: #51607d;
       z-index: 1;
     }
 
     .chat-error {
-      color: #ffc4b5;
-      border-color: rgba(255, 135, 101, 0.24);
+      color: #9c3f2c;
+      border-color: rgba(201, 88, 60, 0.24);
     }
 
     #chat-host,
-    #chat-embed {
-      width: 100%;
-      height: 100%;
-      min-height: 0;
+    #chat-host openai-chatkit {
       display: block;
-      border-radius: 26px;
-      overflow: hidden;
-      background: #ffffff;
-    }
-
-    #chat-embed {
-      border: 0;
+      width: 100%;
+      min-height: 720px;
     }
 
     .empty-list {
@@ -364,8 +389,8 @@
         border-bottom: 1px solid var(--line);
       }
 
-      .chat-frame {
-        height: min(76vh, 820px);
+      .chat-shell {
+        grid-template-columns: 1fr;
       }
     }
 
@@ -385,9 +410,17 @@
         display: grid;
       }
 
-      .chat-frame {
-        height: 72vh;
-        min-height: 560px;
+      .workspace {
+        padding: 16px;
+      }
+
+      .chat-card {
+        min-height: 640px;
+      }
+
+      #chat-host,
+      #chat-host openai-chatkit {
+        min-height: 620px;
       }
     }
   </style>
@@ -431,10 +464,18 @@
       </section>
 
       <section class="workspace">
-        <div class="chat-frame">
-          <div class="chat-loading" id="chat-loading">Φορτώνω τον επιλεγμένο agent...</div>
-          <div class="chat-error" id="chat-error" hidden></div>
-          <div id="chat-host"></div>
+        <div class="chat-shell">
+          <section class="light-card intro-card">
+            <h2 id="intro-title">Το workflow σου</h2>
+            <p id="intro-line-1">Αυτή η σελίδα δεν μιλάει με απλό prompt.</p>
+            <p id="intro-line-2">Μιλάει με το published workflow σου από το Agent Builder μέσω <code>workflow id</code>.</p>
+          </section>
+
+          <section class="light-card chat-card">
+            <div class="chat-loading" id="chat-loading">Φορτώνω τον επιλεγμένο agent...</div>
+            <div class="chat-error" id="chat-error" hidden></div>
+            <div id="chat-host"></div>
+          </section>
         </div>
       </section>
     </main>
@@ -584,6 +625,13 @@
       document.getElementById("sidebar-footer").innerHTML = agent
         ? `${agent.empty_state_hint || agent.placeholder || agent.description || ""}`
         : 'Δομή χωρίς hardcode. Πρόσθεσε νέους agents από το <code>agents.json</code>.';
+      document.getElementById("intro-title").textContent = agent?.welcome_title || "Το workflow σου";
+      document.getElementById("intro-line-1").textContent = agent
+        ? agent.welcome_text || agent.description || "Αυτή η σελίδα μιλάει με τον επιλεγμένο agent."
+        : "Αυτή η σελίδα δεν μιλάει με απλό prompt.";
+      document.getElementById("intro-line-2").innerHTML = agent
+        ? `Ο επιλεγμένος agent είναι ο <code>${agent.name}</code> και ανοίγει το σωστό workflow αυτόματα.`
+        : 'Μιλάει με το published workflow σου από το Agent Builder μέσω <code>workflow id</code>.';
     }
 
     function renderAppChrome() {
@@ -619,8 +667,6 @@
       const agent = getSelectedAgent();
       const host = document.getElementById("chat-host");
       host.innerHTML = "";
-      state.chatMountId += 1;
-      const mountId = state.chatMountId;
 
       if (!agent) {
         showError("Δεν βρέθηκε διαθέσιμος agent.");
@@ -633,24 +679,50 @@
       }
 
       showLoading(`Φορτώνω τον ${agent.name}...`);
-      const frame = document.createElement("iframe");
-      frame.id = "chat-embed";
-      frame.title = `${agent.name} chat`;
-      frame.loading = "eager";
-      frame.src = `/embed.html?agent=${encodeURIComponent(agent.id)}&v=${Date.now()}`;
-      frame.addEventListener("load", () => {
-        if (mountId !== state.chatMountId) {
-          return;
+      const chat = document.createElement("openai-chatkit");
+      chat.id = "chat";
+      host.appendChild(chat);
+      bootChatKit(chat, agent.id);
+    }
+
+    async function waitForChatKit(element) {
+      for (let attempt = 0; attempt < 60; attempt += 1) {
+        if (element && typeof element.setOptions === "function") {
+          return true;
         }
-        hideOverlays();
-      });
-      frame.addEventListener("error", () => {
-        if (mountId !== state.chatMountId) {
-          return;
+        await new Promise((resolve) => window.setTimeout(resolve, 250));
+      }
+      return false;
+    }
+
+    async function bootChatKit(chat, agentId) {
+      const ready = await waitForChatKit(chat);
+      if (!ready) {
+        showError("Το chat widget δεν φόρτωσε σωστά.");
+        return;
+      }
+
+      chat.setOptions({
+        api: {
+          async getClientSecret() {
+            const response = await fetch("/api/chatkit/session", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({ agent_id: agentId })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+              throw new Error(data.error || "Could not create ChatKit session");
+            }
+
+            hideOverlays();
+            return data.client_secret;
+          }
         }
-        showError("Δεν μπόρεσα να φορτώσω το chat frame.");
       });
-      host.appendChild(frame);
     }
 
     async function boot() {
