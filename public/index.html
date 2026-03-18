@@ -338,29 +338,24 @@
     }
 
     .chat-card {
-      position: relative;
       min-height: 760px;
       overflow: hidden;
     }
 
-    .chat-loading,
-    .chat-error {
-      position: absolute;
-      inset: 24px;
-      display: grid;
-      place-items: center;
-      text-align: center;
-      padding: 24px;
-      border-radius: 18px;
-      border: 1px dashed rgba(23, 33, 51, 0.14);
-      background: rgba(255, 255, 255, 0.92);
-      color: #51607d;
-      z-index: 1;
+    .chat-note {
+      margin: 0 0 12px;
+      color: #5e6b85;
+      font-size: 0.92rem;
+      line-height: 1.45;
     }
 
     .chat-error {
+      margin: 0 0 12px;
+      padding: 12px 14px;
+      border-radius: 14px;
+      border: 1px solid rgba(201, 88, 60, 0.24);
+      background: rgba(255, 242, 238, 0.95);
       color: #9c3f2c;
-      border-color: rgba(201, 88, 60, 0.24);
     }
 
     #chat-host,
@@ -472,7 +467,7 @@
           </section>
 
           <section class="light-card chat-card">
-            <div class="chat-loading" id="chat-loading">Φορτώνω τον επιλεγμένο agent...</div>
+            <p class="chat-note" id="chat-note">Το chat φορτώνει. Αν αργήσει λίγο, περίμενε 1-2 δευτερόλεπτα.</p>
             <div class="chat-error" id="chat-error" hidden></div>
             <div id="chat-host"></div>
           </section>
@@ -485,8 +480,7 @@
     const state = {
       agents: [],
       selectedAgentId: null,
-      activeCategory: "all",
-      chatMountId: 0
+      activeCategory: "all"
     };
 
     const accentClassMap = {
@@ -641,26 +635,15 @@
       renderHeader();
     }
 
-    function showLoading(message) {
-      const loading = document.getElementById("chat-loading");
-      const error = document.getElementById("chat-error");
-      loading.hidden = false;
-      loading.textContent = message;
-      error.hidden = true;
-      error.textContent = "";
-    }
-
     function showError(message) {
-      const loading = document.getElementById("chat-loading");
       const error = document.getElementById("chat-error");
-      loading.hidden = true;
       error.hidden = false;
       error.textContent = message;
     }
 
-    function hideOverlays() {
-      document.getElementById("chat-loading").hidden = true;
+    function clearError() {
       document.getElementById("chat-error").hidden = true;
+      document.getElementById("chat-error").textContent = "";
     }
 
     async function mountChatForSelectedAgent() {
@@ -678,7 +661,7 @@
         return;
       }
 
-      showLoading(`Φορτώνω τον ${agent.name}...`);
+      clearError();
       const chat = document.createElement("openai-chatkit");
       chat.id = "chat";
       host.appendChild(chat);
@@ -718,7 +701,6 @@
               throw new Error(data.error || "Could not create ChatKit session");
             }
 
-            hideOverlays();
             return data.client_secret;
           }
         }
