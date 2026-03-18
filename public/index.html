@@ -3,14 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Workflow Chat</title>
+  <title>Revenue AI Console</title>
   <script src="https://cdn.platform.openai.com/deployments/chatkit/chatkit.js" async></script>
   <style>
     :root {
-      color-scheme: light;
-      font-family: Georgia, "Times New Roman", serif;
-      background: linear-gradient(135deg, #f4ede2 0%, #f9f7f3 45%, #e7eef5 100%);
-      color: #1d1d1b;
+      --bg: #09111f;
+      --panel: #111b2f;
+      --panel-soft: #16233b;
+      --panel-strong: #1b2c48;
+      --line: rgba(151, 176, 214, 0.18);
+      --text: #edf3ff;
+      --muted: #91a1bf;
+      --cyan: #37c7ff;
+      --blue: #3c75ff;
+      --green: #24d08b;
+      --violet: #9f6bff;
+      --shadow: 0 28px 90px rgba(3, 8, 18, 0.55);
+      color-scheme: dark;
+      font-family: "Avenir Next", "Trebuchet MS", sans-serif;
     }
 
     * {
@@ -20,97 +30,741 @@
     body {
       margin: 0;
       min-height: 100vh;
+      background:
+        radial-gradient(circle at top left, rgba(55, 199, 255, 0.18), transparent 24%),
+        radial-gradient(circle at bottom right, rgba(159, 107, 255, 0.16), transparent 22%),
+        linear-gradient(160deg, #081120 0%, #0c1730 52%, #0a1324 100%);
+      color: var(--text);
+    }
+
+    .app-shell {
+      min-height: 100vh;
+      display: grid;
+      grid-template-columns: 320px minmax(0, 1fr);
+    }
+
+    .sidebar {
+      border-right: 1px solid var(--line);
+      background:
+        linear-gradient(180deg, rgba(15, 25, 45, 0.98) 0%, rgba(11, 19, 35, 0.96) 100%);
+      padding: 24px 18px 20px;
+      display: grid;
+      grid-template-rows: auto auto auto 1fr auto;
+      gap: 18px;
+    }
+
+    .brand-card {
+      padding: 24px 20px;
+      border-radius: 26px;
+      background:
+        linear-gradient(135deg, rgba(59, 117, 255, 0.92) 0%, rgba(55, 199, 255, 0.92) 100%);
+      box-shadow: var(--shadow);
+    }
+
+    .brand-title {
+      margin: 0;
+      font-family: "Iowan Old Style", Georgia, serif;
+      font-size: 2.25rem;
+      line-height: 0.95;
+      letter-spacing: -0.06em;
+    }
+
+    .brand-subtitle {
+      margin: 10px 0 0;
+      color: rgba(236, 244, 255, 0.82);
+      font-size: 0.95rem;
+    }
+
+    .section-label {
+      margin: 0 0 10px;
+      color: var(--muted);
+      font-size: 0.78rem;
+      letter-spacing: 0.14em;
+      text-transform: uppercase;
+    }
+
+    .chip-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .chip {
+      border: 1px solid var(--line);
+      background: rgba(19, 31, 54, 0.86);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 8px 12px;
+      font: inherit;
+      font-size: 0.85rem;
+      cursor: pointer;
+      transition: 140ms ease;
+    }
+
+    .chip:hover,
+    .chip.active {
+      color: var(--text);
+      border-color: rgba(55, 199, 255, 0.44);
+      background: rgba(35, 62, 102, 0.92);
+    }
+
+    .agent-list {
+      display: grid;
+      gap: 10px;
+      align-content: start;
+    }
+
+    .agent-card {
+      width: 100%;
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(20, 31, 54, 0.98), rgba(14, 23, 40, 0.92));
+      color: var(--text);
+      border-radius: 20px;
+      padding: 14px;
+      text-align: left;
+      cursor: pointer;
+      transition: 160ms ease;
+      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.03);
+    }
+
+    .agent-card:hover {
+      transform: translateY(-1px);
+      border-color: rgba(55, 199, 255, 0.38);
+    }
+
+    .agent-card.active {
+      border-color: rgba(55, 199, 255, 0.75);
+      box-shadow:
+        0 0 0 1px rgba(55, 199, 255, 0.24),
+        0 16px 36px rgba(9, 18, 34, 0.42);
+      background: linear-gradient(180deg, rgba(34, 58, 98, 0.96), rgba(25, 44, 76, 0.94));
+    }
+
+    .agent-card.disabled {
+      opacity: 0.48;
+      cursor: not-allowed;
+    }
+
+    .agent-top {
+      display: flex;
+      gap: 12px;
+      align-items: flex-start;
+    }
+
+    .agent-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 14px;
       display: grid;
       place-items: center;
-      padding: 24px;
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: white;
+      background: linear-gradient(135deg, rgba(59, 117, 255, 0.95), rgba(55, 199, 255, 0.92));
+      flex: 0 0 auto;
     }
 
-    .shell {
-      width: min(100%, 960px);
+    .agent-name {
+      margin: 0;
+      font-size: 1rem;
+      line-height: 1.15;
+    }
+
+    .agent-subtitle {
+      margin: 4px 0 0;
+      color: var(--muted);
+      font-size: 0.84rem;
+      line-height: 1.3;
+    }
+
+    .badge-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 12px;
+    }
+
+    .badge {
+      border-radius: 999px;
+      padding: 5px 9px;
+      font-size: 0.74rem;
+      color: #dce8ff;
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .sidebar-grid {
       display: grid;
-      gap: 20px;
-      grid-template-columns: 320px minmax(0, 1fr);
-      align-items: start;
+      gap: 12px;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
 
-    .card {
-      background: rgba(255, 255, 255, 0.86);
-      border: 1px solid rgba(29, 29, 27, 0.08);
-      border-radius: 24px;
-      box-shadow: 0 18px 50px rgba(54, 54, 45, 0.08);
+    .metric-card {
+      padding: 14px;
+      border-radius: 18px;
+      border: 1px solid var(--line);
+      background: rgba(19, 31, 54, 0.85);
+    }
+
+    .metric-label {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .metric-value {
+      margin-top: 10px;
+      font-size: 1.8rem;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .sidebar-footer {
+      border: 1px solid var(--line);
+      border-radius: 18px;
+      padding: 14px 16px;
+      color: var(--muted);
+      background: rgba(19, 31, 54, 0.8);
+      font-size: 0.9rem;
+    }
+
+    .main {
       padding: 24px;
+      display: grid;
+      gap: 18px;
+      grid-template-rows: auto auto minmax(0, 1fr);
     }
 
-    h1 {
-      margin: 0 0 12px;
-      font-size: clamp(2rem, 4vw, 3rem);
+    .topbar,
+    .summary-strip,
+    .workspace {
+      border: 1px solid var(--line);
+      background: linear-gradient(180deg, rgba(15, 24, 43, 0.95), rgba(11, 18, 33, 0.94));
+      border-radius: 28px;
+      box-shadow: var(--shadow);
+    }
+
+    .topbar {
+      padding: 18px 22px;
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .headline {
+      display: grid;
+      gap: 6px;
+    }
+
+    .eyebrow {
+      color: var(--cyan);
+      font-size: 0.83rem;
+      letter-spacing: 0.16em;
+      text-transform: uppercase;
+    }
+
+    .headline h1 {
+      margin: 0;
+      font-size: clamp(1.7rem, 3vw, 2.2rem);
       line-height: 0.95;
-      letter-spacing: -0.04em;
     }
 
-    p {
-      margin: 0 0 12px;
-      line-height: 1.5;
+    .headline p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 1rem;
     }
 
-    code {
-      background: #f1ece3;
-      padding: 2px 6px;
-      border-radius: 8px;
+    .status-pill {
+      display: inline-flex;
+      gap: 10px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      padding: 11px 16px;
+      color: var(--text);
+      background: rgba(17, 28, 48, 0.92);
+      white-space: nowrap;
     }
 
-    #chat {
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 999px;
+      background: var(--green);
+      box-shadow: 0 0 0 6px rgba(36, 208, 139, 0.12);
+    }
+
+    .summary-strip {
+      padding: 18px 22px;
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 12px;
+    }
+
+    .summary-card {
+      border-radius: 20px;
+      border: 1px solid var(--line);
+      background: rgba(22, 35, 59, 0.72);
+      padding: 14px 16px;
+    }
+
+    .summary-card .label {
+      color: var(--muted);
+      font-size: 0.8rem;
+    }
+
+    .summary-card .value {
+      margin-top: 10px;
+      font-size: 1.4rem;
+      font-weight: 700;
+    }
+
+    .workspace {
+      padding: 18px;
+      display: grid;
+      grid-template-rows: auto minmax(0, 1fr);
+      gap: 16px;
+      min-height: 0;
+    }
+
+    .hero {
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      padding: 20px 22px;
+      background:
+        radial-gradient(circle at top right, rgba(55, 199, 255, 0.12), transparent 34%),
+        linear-gradient(180deg, rgba(17, 27, 47, 0.9), rgba(12, 20, 34, 0.9));
+      display: flex;
+      justify-content: space-between;
+      gap: 18px;
+      align-items: center;
+    }
+
+    .hero-copy h2 {
+      margin: 0 0 10px;
+      font-size: 1.45rem;
+      line-height: 1;
+    }
+
+    .hero-copy p {
+      margin: 0;
+      color: var(--muted);
+      max-width: 60ch;
+    }
+
+    .hero-note {
+      display: grid;
+      gap: 8px;
+      justify-items: end;
+      text-align: right;
+      color: var(--muted);
+      font-size: 0.88rem;
+    }
+
+    .hero-note strong {
+      color: var(--text);
+    }
+
+    .chat-frame {
+      min-height: 0;
+      border: 1px solid var(--line);
+      border-radius: 24px;
+      overflow: hidden;
+      background: rgba(9, 15, 28, 0.74);
+      position: relative;
+    }
+
+    .chat-loading,
+    .chat-error {
+      position: absolute;
+      inset: 18px;
+      display: grid;
+      place-items: center;
+      text-align: center;
+      padding: 24px;
+      border-radius: 20px;
+      border: 1px dashed rgba(151, 176, 214, 0.22);
+      background: rgba(8, 14, 26, 0.74);
+      color: var(--muted);
+      z-index: 1;
+    }
+
+    .chat-error {
+      color: #ffc4b5;
+      border-color: rgba(255, 135, 101, 0.24);
+    }
+
+    #chat-host,
+    #chat-host openai-chatkit {
       width: 100%;
-      min-height: 720px;
+      height: 100%;
+      min-height: 680px;
       display: block;
     }
 
-    @media (max-width: 860px) {
-      .shell {
+    .empty-list {
+      padding: 16px;
+      border-radius: 18px;
+      border: 1px dashed var(--line);
+      color: var(--muted);
+      text-align: center;
+      background: rgba(19, 31, 54, 0.64);
+    }
+
+    @media (max-width: 1180px) {
+      .app-shell {
         grid-template-columns: 1fr;
       }
 
-      #chat {
+      .sidebar {
+        border-right: none;
+        border-bottom: 1px solid var(--line);
+      }
+
+      .summary-strip {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+      }
+    }
+
+    @media (max-width: 760px) {
+      .main {
+        padding: 16px;
+      }
+
+      .topbar,
+      .summary-strip,
+      .workspace,
+      .sidebar {
+        border-radius: 22px;
+      }
+
+      .topbar,
+      .hero {
+        grid-template-columns: 1fr;
+        display: grid;
+      }
+
+      .hero-note {
+        justify-items: start;
+        text-align: left;
+      }
+
+      .summary-strip {
+        grid-template-columns: 1fr;
+      }
+
+      #chat-host,
+      #chat-host openai-chatkit {
         min-height: 620px;
       }
     }
   </style>
 </head>
 <body>
-  <main class="shell">
-    <section class="card">
-      <h1>Το workflow σου</h1>
-      <p>Αυτή η σελίδα δεν μιλάει με απλό prompt.</p>
-      <p>Μιλάει με το published workflow σου από το Agent Builder μέσω <code>workflow id</code>.</p>
-    </section>
+  <div class="app-shell">
+    <aside class="sidebar">
+      <section class="brand-card">
+        <h1 class="brand-title">Revenue<br>Manager</h1>
+        <p class="brand-subtitle">Multi-agent revenue cockpit for pricing, forecasting and group decisions.</p>
+      </section>
 
-    <section class="card">
-      <openai-chatkit id="chat"></openai-chatkit>
-    </section>
-  </main>
+      <section>
+        <p class="section-label">Categories</p>
+        <div class="chip-row" id="category-filters"></div>
+      </section>
+
+      <section>
+        <p class="section-label">Agents</p>
+        <div class="agent-list" id="agent-list"></div>
+      </section>
+
+      <section class="sidebar-grid" id="sidebar-metrics"></section>
+
+      <section class="sidebar-footer" id="sidebar-footer">
+        Δομή χωρίς hardcode. Πρόσθεσε νέους agents από το <code>agents.json</code>.
+      </section>
+    </aside>
+
+    <main class="main">
+      <section class="topbar">
+        <div class="headline">
+          <span class="eyebrow" id="topbar-category">Revenue Console</span>
+          <h1 id="topbar-title">Loading agents...</h1>
+          <p id="topbar-subtitle">Διαβάζω το registry και ετοιμάζω το κατάλληλο workflow.</p>
+        </div>
+        <div class="status-pill">
+          <span class="status-dot"></span>
+          <span id="topbar-status">Initializing</span>
+        </div>
+      </section>
+
+      <section class="summary-strip" id="summary-strip"></section>
+
+      <section class="workspace">
+        <div class="hero">
+          <div class="hero-copy">
+            <h2 id="hero-title">Revenue AI</h2>
+            <p id="hero-text">Επιλογή agent και δυναμική σύνδεση με το σωστό workflow χωρίς hardcoded ρυθμίσεις.</p>
+          </div>
+          <div class="hero-note">
+            <strong id="hero-agent-name">-</strong>
+            <span id="hero-hint">-</span>
+          </div>
+        </div>
+
+        <div class="chat-frame">
+          <div class="chat-loading" id="chat-loading">Φορτώνω τον επιλεγμένο agent...</div>
+          <div class="chat-error" id="chat-error" hidden></div>
+          <div id="chat-host"></div>
+        </div>
+      </section>
+    </main>
+  </div>
 
   <script>
-    function bootChatKit() {
-      const chat = document.getElementById("chat");
+    const state = {
+      agents: [],
+      selectedAgentId: null,
+      activeCategory: "all",
+      chatMountId: 0
+    };
 
-      if (!chat || typeof chat.setOptions !== "function") {
-        window.setTimeout(bootChatKit, 250);
+    const accentClassMap = {
+      blue: "linear-gradient(135deg, rgba(59, 117, 255, 0.95), rgba(55, 199, 255, 0.92))",
+      cyan: "linear-gradient(135deg, rgba(55, 199, 255, 0.95), rgba(70, 234, 217, 0.92))",
+      violet: "linear-gradient(135deg, rgba(112, 92, 255, 0.95), rgba(170, 108, 255, 0.92))",
+      green: "linear-gradient(135deg, rgba(36, 208, 139, 0.95), rgba(84, 231, 179, 0.92))"
+    };
+
+    async function fetchAgents() {
+      const response = await fetch("/api/agents");
+      const data = await response.json();
+      if (!response.ok) {
+        throw new Error(data.error || "Could not load agents");
+      }
+      return data;
+    }
+
+    function getSelectedAgent() {
+      return state.agents.find((agent) => agent.id === state.selectedAgentId) || null;
+    }
+
+    function getVisibleAgents() {
+      const enabledAgents = state.agents.filter((agent) => agent.enabled);
+      if (state.activeCategory === "all") {
+        return enabledAgents;
+      }
+      return enabledAgents.filter((agent) => agent.categories.includes(state.activeCategory));
+    }
+
+    function getAllCategories() {
+      const categories = new Set();
+      state.agents.forEach((agent) => {
+        (agent.categories || []).forEach((category) => categories.add(category));
+      });
+      return ["all"].concat(Array.from(categories).sort());
+    }
+
+    function renderCategories() {
+      const host = document.getElementById("category-filters");
+      host.innerHTML = "";
+
+      getAllCategories().forEach((category) => {
+        const button = document.createElement("button");
+        button.className = "chip" + (state.activeCategory === category ? " active" : "");
+        button.textContent = category === "all" ? "all agents" : category;
+        button.type = "button";
+        button.addEventListener("click", () => {
+          state.activeCategory = category;
+          renderCategories();
+          renderAgentList();
+        });
+        host.appendChild(button);
+      });
+    }
+
+    function renderAgentList() {
+      const host = document.getElementById("agent-list");
+      host.innerHTML = "";
+
+      const agents = getVisibleAgents();
+      if (!agents.length) {
+        const empty = document.createElement("div");
+        empty.className = "empty-list";
+        empty.textContent = "Δεν υπάρχουν agents σε αυτή την κατηγορία.";
+        host.appendChild(empty);
+        return;
+      }
+
+      agents.forEach((agent) => {
+        const button = document.createElement("button");
+        const active = agent.id === state.selectedAgentId;
+        button.type = "button";
+        button.className = "agent-card" + (active ? " active" : "") + (!agent.ready ? " disabled" : "");
+        button.disabled = !agent.ready;
+        button.addEventListener("click", () => {
+          if (!agent.ready || agent.id === state.selectedAgentId) {
+            return;
+          }
+          state.selectedAgentId = agent.id;
+          renderAppChrome();
+          mountChatForSelectedAgent();
+        });
+
+        const iconStyle = accentClassMap[agent.accent] || accentClassMap.blue;
+        button.innerHTML = `
+          <div class="agent-top">
+            <div class="agent-icon" style="background:${iconStyle};">${agent.icon || "AI"}</div>
+            <div>
+              <h3 class="agent-name">${agent.name}</h3>
+              <p class="agent-subtitle">${agent.subtitle || ""}</p>
+            </div>
+          </div>
+          <div class="badge-row">
+            ${(agent.categories || []).slice(0, 3).map((item) => `<span class="badge">${item}</span>`).join("")}
+          </div>
+        `;
+        host.appendChild(button);
+      });
+    }
+
+    function renderMetrics() {
+      const metricsHost = document.getElementById("sidebar-metrics");
+      const summaryHost = document.getElementById("summary-strip");
+      const categoriesCount = getAllCategories().length - 1;
+      const activeAgents = state.agents.filter((agent) => agent.enabled).length;
+      const featuredAgents = state.agents.filter((agent) => agent.featured && agent.enabled).length;
+      const readyAgents = state.agents.filter((agent) => agent.ready).length;
+
+      const sidebarMetrics = [
+        { label: "Agents", value: activeAgents },
+        { label: "Featured", value: featuredAgents },
+        { label: "Categories", value: categoriesCount },
+        { label: "Ready", value: readyAgents }
+      ];
+
+      metricsHost.innerHTML = sidebarMetrics.map((item) => `
+        <div class="metric-card">
+          <div class="metric-label">${item.label}</div>
+          <div class="metric-value">${item.value}</div>
+        </div>
+      `).join("");
+
+      const selectedAgent = getSelectedAgent();
+      const summaryCards = [
+        { label: "Selected Agent", value: selectedAgent ? selectedAgent.name : "-" },
+        { label: "Status", value: selectedAgent && selectedAgent.ready ? "Online" : "Needs setup" },
+        { label: "Categories", value: selectedAgent ? selectedAgent.categories.length : 0 },
+        { label: "Audience", value: selectedAgent && selectedAgent.audiences.length ? selectedAgent.audiences[0] : "-" }
+      ];
+
+      summaryHost.innerHTML = summaryCards.map((item) => `
+        <div class="summary-card">
+          <div class="label">${item.label}</div>
+          <div class="value">${item.value}</div>
+        </div>
+      `).join("");
+    }
+
+    function renderHeader() {
+      const agent = getSelectedAgent();
+      const categoryText = agent && agent.categories.length ? agent.categories.join(" / ") : "Revenue Console";
+      document.getElementById("topbar-category").textContent = categoryText;
+      document.getElementById("topbar-title").textContent = agent ? agent.name : "No agent selected";
+      document.getElementById("topbar-subtitle").textContent = agent ? (agent.subtitle || agent.description || "") : "Δεν βρέθηκε διαθέσιμος agent.";
+      document.getElementById("topbar-status").textContent = agent && agent.ready ? "Online" : "Needs workflow";
+      document.getElementById("hero-title").textContent = agent ? (agent.welcome_title || agent.name) : "Revenue AI";
+      document.getElementById("hero-text").textContent = agent ? (agent.welcome_text || agent.description || "") : "Πρόσθεσε τουλάχιστον έναν agent στο registry.";
+      document.getElementById("hero-agent-name").textContent = agent ? agent.name : "-";
+      document.getElementById("hero-hint").textContent = agent ? (agent.empty_state_hint || agent.placeholder || "") : "-";
+    }
+
+    function renderAppChrome() {
+      renderCategories();
+      renderAgentList();
+      renderMetrics();
+      renderHeader();
+    }
+
+    function showLoading(message) {
+      const loading = document.getElementById("chat-loading");
+      const error = document.getElementById("chat-error");
+      loading.hidden = false;
+      loading.textContent = message;
+      error.hidden = true;
+      error.textContent = "";
+    }
+
+    function showError(message) {
+      const loading = document.getElementById("chat-loading");
+      const error = document.getElementById("chat-error");
+      loading.hidden = true;
+      error.hidden = false;
+      error.textContent = message;
+    }
+
+    function hideOverlays() {
+      document.getElementById("chat-loading").hidden = true;
+      document.getElementById("chat-error").hidden = true;
+    }
+
+    async function waitForChatKit(element, mountId) {
+      for (let attempt = 0; attempt < 60; attempt += 1) {
+        if (mountId !== state.chatMountId) {
+          return false;
+        }
+        if (element && typeof element.setOptions === "function") {
+          return true;
+        }
+        await new Promise((resolve) => window.setTimeout(resolve, 250));
+      }
+      return false;
+    }
+
+    async function mountChatForSelectedAgent() {
+      const agent = getSelectedAgent();
+      const host = document.getElementById("chat-host");
+      host.innerHTML = "";
+      state.chatMountId += 1;
+      const mountId = state.chatMountId;
+
+      if (!agent) {
+        showError("Δεν βρέθηκε διαθέσιμος agent.");
+        return;
+      }
+
+      if (!agent.ready) {
+        showError("Ο επιλεγμένος agent δεν έχει workflow id ακόμη.");
+        return;
+      }
+
+      showLoading(`Φορτώνω τον ${agent.name}...`);
+
+      const chat = document.createElement("openai-chatkit");
+      host.appendChild(chat);
+
+      const ready = await waitForChatKit(chat, mountId);
+      if (!ready) {
+        showError("Το ChatKit δεν φόρτωσε σωστά.");
         return;
       }
 
       chat.setOptions({
         api: {
           async getClientSecret() {
+            const currentAgent = getSelectedAgent();
             const response = await fetch("/api/chatkit/session", {
               method: "POST",
               headers: {
                 "Content-Type": "application/json"
-              }
+              },
+              body: JSON.stringify({
+                agent_id: currentAgent ? currentAgent.id : null
+              })
             });
 
             const data = await response.json();
             if (!response.ok) {
-              console.error("Session error", data);
               throw new Error(data.error || "Could not create ChatKit session");
             }
 
@@ -118,9 +772,23 @@
           }
         }
       });
+
+      hideOverlays();
     }
 
-    bootChatKit();
+    async function boot() {
+      try {
+        const data = await fetchAgents();
+        state.agents = (data.agents || []).sort((left, right) => left.order - right.order);
+        state.selectedAgentId = data.default_agent_id || (state.agents[0] && state.agents[0].id);
+        renderAppChrome();
+        await mountChatForSelectedAgent();
+      } catch (error) {
+        showError(error.message || "Δεν μπόρεσα να φορτώσω το registry των agents.");
+      }
+    }
+
+    boot();
   </script>
 </body>
 </html>

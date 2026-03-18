@@ -12,5 +12,17 @@ services:
         sync: false
       - key: OPENAI_WORKFLOW_VERSION
         sync: false
+      - key: OPENAI_WORKFLOW_STANDARD
+        sync: false
+      - key: OPENAI_WORKFLOW_STANDARD_VERSION
+        sync: false
+      - key: OPENAI_WORKFLOW_ADVANCED
+        sync: false
+      - key: OPENAI_WORKFLOW_ADVANCED_VERSION
+        sync: false
+      - key: OPENAI_WORKFLOW_GROUP
+        sync: false
+      - key: OPENAI_WORKFLOW_GROUP_VERSION
+        sync: false
       - key: HOST
         value: 0.0.0.0

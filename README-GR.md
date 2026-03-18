@@ -1,10 +1,10 @@
 # Τι είναι αυτό
 
-Αυτός ο φάκελος είναι ένα **online app** για το published workflow σου από το Agent Builder.
+Αυτός ο φάκελος είναι ένα **online multi-agent app** για published workflows από το Agent Builder.
 
 Δεν είναι απλό chat.
 
-Το frontend μιλάει με το workflow σου μέσω ChatKit και το backend δημιουργεί ασφαλές session.
+Το frontend διαβάζει agents από το [`agents.json`](/Users/antonispapachrisanthou/Documents/test pro/agents.json#L1), δείχνει δυναμικό sidebar/dashboard και το backend δημιουργεί ασφαλές ChatKit session για το workflow του επιλεγμένου agent.
 
 # Τοπικό run
 
@@ -12,8 +12,8 @@
 2. Κάνε αντίγραφο με όνομα `.env`.
 3. Μέσα στο `.env` βάλε:
    - το OpenAI API key σου
-   - το workflow id σου
-   - προαιρετικά το version αν θέλεις συγκεκριμένη έκδοση
+   - το fallback workflow id σου στο `OPENAI_WORKFLOW_ID`
+   - προαιρετικά dedicated workflow ids για κάθε agent
 4. Άνοιξε terminal μέσα σε αυτόν τον φάκελο.
 5. Τρέξε:
 
@@ -27,6 +27,30 @@ python3 server.py
 http://127.0.0.1:8000
 ```
 
+# Agent registry
+
+Οι agents δεν είναι hardcoded.
+
+Τους ορίζεις στο [`agents.json`](/Users/antonispapachrisanthou/Documents/test pro/agents.json#L1).
+
+Για κάθε νέο agent συμπληρώνεις:
+
+- `id`
+- `name`
+- `subtitle`
+- `description`
+- `categories`
+- `tags`
+- `workflow_env` ή `workflow_id`
+- `featured`
+- `enabled`
+- `order`
+- `welcome_title`
+- `welcome_text`
+- `placeholder`
+
+Αν ένα agent ανήκει σε πολλές κατηγορίες, βάζεις πολλές τιμές στο `categories`.
+
 # Online deploy σε Render
 
 1. Κάνε upload τον φάκελο σε GitHub repository.
@@ -36,8 +60,8 @@ http://127.0.0.1:8000
 5. Το Render θα διαβάσει το [`render.yaml`](/Users/antonispapachrisanthou/Documents/test pro/render.yaml#L1).
 6. Στα environment variables βάλε:
    - `OPENAI_API_KEY`
-   - `OPENAI_WORKFLOW_ID`
-   - προαιρετικά `OPENAI_WORKFLOW_VERSION`
+   - `OPENAI_WORKFLOW_ID` σαν fallback
+   - προαιρετικά per-agent workflow vars όπως `OPENAI_WORKFLOW_STANDARD`, `OPENAI_WORKFLOW_ADVANCED`, `OPENAI_WORKFLOW_GROUP`
 7. Κάνε deploy.
 8. Όταν ανέβει, άνοιξε το URL του Render.
 
@@ -55,7 +79,8 @@ http://127.0.0.1:8000
 # Αν δεν δουλεύει
 
 - `Missing OPENAI_API_KEY`: δεν έβαλες API key στο `.env`
-- `Missing OPENAI_WORKFLOW_ID`: δεν έβαλες workflow id στο `.env`
+- `No configured agents were found`: το `agents.json` είναι λάθος ή άδειο
+- `Agent '...' is not ready`: ο agent δεν έχει workflow id από env/config
 - `401`: λάθος API key
 - `404` ή `workflow not found`: λάθος workflow id ή δεν είναι live/published
 - `500`: δες το terminal log του backend
