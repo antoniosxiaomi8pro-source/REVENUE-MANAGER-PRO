@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="el">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Revenue Chat</title>
+  <script src="https://cdn.platform.openai.com/deployments/chatkit/chatkit.js" async></script>
+  <style>
+    html,
+    body {
+      margin: 0;
+      height: 100%;
+      background: #f4f7fb;
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+
+    body {
+      display: grid;
+      min-height: 100vh;
+    }
+
+    .embed-shell {
+      min-height: 100vh;
+      padding: 12px;
+      box-sizing: border-box;
+      background: #f4f7fb;
+    }
+
+    #status {
+      display: none;
+      place-items: center;
+      min-height: 140px;
+      color: #32415f;
+      font-size: 0.95rem;
+      text-align: center;
+      padding: 16px;
+    }
+
+    #status.visible {
+      display: grid;
+    }
+
+    #chat,
+    #chat openai-chatkit {
+      display: block;
+      width: 100%;
+      height: calc(100vh - 24px);
+      min-height: 760px;
+      border-radius: 24px;
+      overflow: hidden;
+      background: #ffffff;
+      box-shadow: 0 10px 30px rgba(15, 23, 42, 0.08);
+    }
+  </style>
+</head>
+<body>
+  <div class="embed-shell">
+    <div id="status" class="visible">Φορτώνω το chat...</div>
+    <openai-chatkit id="chat"></openai-chatkit>
+  </div>
+
+  <script>
+    const params = new URLSearchParams(window.location.search);
+    const agentId = params.get("agent");
+
+    function setStatus(message) {
+      const status = document.getElementById("status");
+      status.textContent = message;
+      status.classList.add("visible");
+    }
+
+    function clearStatus() {
+      document.getElementById("status").classList.remove("visible");
+    }
+
+    async function waitForChatKit(element) {
+      for (let attempt = 0; attempt < 60; attempt += 1) {
+        if (element && typeof element.setOptions === "function") {
+          return true;
+        }
+        await new Promise((resolve) => window.setTimeout(resolve, 250));
+      }
+      return false;
+    }
+
+    async function boot() {
+      const chat = document.getElementById("chat");
+      const ready = await waitForChatKit(chat);
+      if (!ready) {
+        setStatus("Το chat widget δεν φόρτωσε σωστά.");
+        return;
+      }
+
+      chat.setOptions({
+        api: {
+          async getClientSecret() {
+            const response = await fetch("/api/chatkit/session", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json"
+              },
+              body: JSON.stringify({ agent_id: agentId })
+            });
+
+            const data = await response.json();
+            if (!response.ok) {
+              throw new Error(data.error || "Could not create ChatKit session");
+            }
+
+            clearStatus();
+            return data.client_secret;
+          }
+        }
+      });
+    }
+
+    window.addEventListener("error", () => {
+      setStatus("Υπάρχει πρόβλημα με το chat widget.");
+    });
+
+    window.addEventListener("unhandledrejection", (event) => {
+      setStatus(event.reason?.message || "Δεν μπόρεσα να ξεκινήσω τη συνομιλία.");
+    });
+
+    boot();
+  </script>
+</body>
+</html>

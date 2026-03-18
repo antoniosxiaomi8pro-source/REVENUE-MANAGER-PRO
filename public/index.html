@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Revenue AI Console</title>
-  <script src="https://cdn.platform.openai.com/deployments/chatkit/chatkit.js" async></script>
   <style>
     :root {
       --bg: #09111f;
@@ -333,7 +332,7 @@
     }
 
     #chat-host,
-    #chat-host openai-chatkit {
+    #chat-embed {
       width: 100%;
       height: auto;
       min-height: 840px;
@@ -344,6 +343,10 @@
       box-shadow:
         inset 0 0 0 1px rgba(17, 27, 47, 0.06),
         0 12px 26px rgba(4, 10, 22, 0.18);
+    }
+
+    #chat-embed {
+      border: 0;
     }
 
     .empty-list {
@@ -391,7 +394,7 @@
       }
 
       #chat-host,
-      #chat-host openai-chatkit {
+      #chat-embed {
         min-height: 720px;
       }
     }
@@ -617,19 +620,6 @@
       document.getElementById("chat-error").hidden = true;
     }
 
-    async function waitForChatKit(element, mountId) {
-      for (let attempt = 0; attempt < 60; attempt += 1) {
-        if (mountId !== state.chatMountId) {
-          return false;
-        }
-        if (element && typeof element.setOptions === "function") {
-          return true;
-        }
-        await new Promise((resolve) => window.setTimeout(resolve, 250));
-      }
-      return false;
-    }
-
     async function mountChatForSelectedAgent() {
       const agent = getSelectedAgent();
       const host = document.getElementById("chat-host");
@@ -648,41 +638,24 @@
       }
 
       showLoading(`Φορτώνω τον ${agent.name}...`);
-
-      const chat = document.createElement("openai-chatkit");
-      host.appendChild(chat);
-
-      const ready = await waitForChatKit(chat, mountId);
-      if (!ready) {
-        showError("Το ChatKit δεν φόρτωσε σωστά.");
-        return;
-      }
-
-      chat.setOptions({
-        api: {
-          async getClientSecret() {
-            const currentAgent = getSelectedAgent();
-            const response = await fetch("/api/chatkit/session", {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json"
-              },
-              body: JSON.stringify({
-                agent_id: currentAgent ? currentAgent.id : null
-              })
-            });
-
-            const data = await response.json();
-            if (!response.ok) {
-              throw new Error(data.error || "Could not create ChatKit session");
-            }
-
-            return data.client_secret;
-          }
+      const frame = document.createElement("iframe");
+      frame.id = "chat-embed";
+      frame.title = `${agent.name} chat`;
+      frame.loading = "eager";
+      frame.src = `/embed.html?agent=${encodeURIComponent(agent.id)}&v=${Date.now()}`;
+      frame.addEventListener("load", () => {
+        if (mountId !== state.chatMountId) {
+          return;
         }
+        hideOverlays();
       });
-
-      hideOverlays();
+      frame.addEventListener("error", () => {
+        if (mountId !== state.chatMountId) {
+          return;
+        }
+        showError("Δεν μπόρεσα να φορτώσω το chat frame.");
+      });
+      host.appendChild(frame);
     }
 
     async function boot() {
