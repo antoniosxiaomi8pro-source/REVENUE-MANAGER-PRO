@@ -67,5 +67,26 @@
     "welcome_text": "Στείλε group request και current demand context για καθαρή εμπορική απόφαση.",
     "placeholder": "Δώσε group rooms, rate, dates και transient demand...",
     "empty_state_hint": "Χρήσιμο για displacement logic και group accept/decline."
+  },
+  {
+    "id": "ai-marketing-manager",
+    "name": "AI Marketing Manager",
+    "subtitle": "Campaign strategy, positioning and growth planning",
+    "description": "Marketing strategy assistant for campaigns, offers, positioning, audience targeting and commercial growth decisions.",
+    "workflow_id": "wf_69bd327be97c81908f9d00adfe79c26107b5a3490142a1e8",
+    "workflow_version_fallback_env": "OPENAI_WORKFLOW_VERSION",
+    "status": "active",
+    "enabled": true,
+    "featured": true,
+    "categories": ["premium", "marketing"],
+    "tags": ["campaigns", "offers", "positioning", "audience", "growth"],
+    "audiences": ["hotel", "marketing-team", "commercial-team"],
+    "accent": "green",
+    "icon": "MM",
+    "order": 4,
+    "welcome_title": "Welcome to Marketing AI",
+    "welcome_text": "Ξεκίνα μια συνομιλία για καμπάνιες, positioning, offers και commercial growth.",
+    "placeholder": "Ρώτησέ με για campaign strategy, target audience, offers ή marketing plan...",
+    "empty_state_hint": "Χρήσιμο για campaign planning, positioning και εμπορική ανάπτυξη."
   }
 ]
